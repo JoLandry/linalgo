@@ -16,8 +16,9 @@ func TestNew(t *testing.T) {
 
 func TestGetData(t *testing.T) {
 	data := [][]float64{{1.0, 2.0}, {3.0, 4.0}}
-	var newMatrix *Matrix = NewFromData(data)
+	newMatrix, err := NewFromData(data)
 
+	assert.NoError(t, err)
 	assert.Equal(t, newMatrix.GetData(), data)
 }
 
@@ -55,7 +56,8 @@ func TestSetElementAt(t *testing.T) {
 func TestNewFromData_ValidInput(t *testing.T) {
 	input := [][]float64{{1.0, 2.0}, {3.0, 4.0}}
 
-	mat := NewFromData(input)
+	mat, err := NewFromData(input)
+	assert.NoError(t, err)
 
 	assert.Equal(t, 2, mat.nbRows)
 	assert.Equal(t, 2, mat.nbCols)
@@ -65,7 +67,8 @@ func TestNewFromData_ValidInput(t *testing.T) {
 func TestNewFromData_EmptyInput(t *testing.T) {
 	input := [][]float64{}
 
-	mat := NewFromData(input)
+	mat, err := NewFromData(input)
+	assert.NoError(t, err)
 
 	assert.Equal(t, 0, mat.nbRows)
 	assert.Equal(t, 0, mat.nbCols)
@@ -75,22 +78,19 @@ func TestNewFromData_EmptyInput(t *testing.T) {
 func TestNewFromData_DeepCopy(t *testing.T) {
 	input := [][]float64{{1.0, 2.0}, {3.0, 4.0}}
 
-	mat := NewFromData(input)
-	input[0][0] = 99.0
+	mat, err := NewFromData(input)
+	assert.NoError(t, err)
 
-	// Value was not changed (still the old one)
+	input[0][0] = 99.0
+	// Should be the old value still
 	assert.Equal(t, 1.0, mat.GetElementAt(0, 0))
 }
 
-func TestNewFromData_InconsistentCols_Panics(t *testing.T) {
+func TestNewFromData_InconsistentCols_ReturnsError(t *testing.T) {
 	input := [][]float64{{1.0, 2.0}, {3.0}}
 
-	// Defer and then assess what's returned (or not)
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected panic due to inconsistent column lengths, but none occurred")
-		}
-	}()
-
-	_ = NewFromData(input)
+	mat, err := NewFromData(input)
+	assert.Nil(t, mat)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "inconsistent number of columns")
 }

@@ -1,5 +1,9 @@
 package matrix
 
+import (
+	"fmt"
+)
+
 type Matrix struct {
 	data   [][]float64
 	nbRows int
@@ -50,23 +54,28 @@ func New(nbRowsMat int, nbColsMat int) *Matrix {
 }
 
 // Create a new matrix from a given 2D slice (deep copy)
-func NewFromData(mData [][]float64) *Matrix {
+//
+// If the input has no row, then a pointer to a new empty matrix
+// Is returned
+//
+// Return an error if there is any inconsistency in the number of columns
+func NewFromData(mData [][]float64) (*Matrix, error) {
 	nbRows := len(mData)
 	if nbRows == 0 {
 		return &Matrix{
 			data:   [][]float64{},
 			nbRows: 0,
 			nbCols: 0,
-		}
+		}, nil
 	}
 
 	nbCols := len(mData[0])
 
-	// Make a deep copy
+	// Validate & deep copy
 	copiedMatrix := make([][]float64, nbRows)
 	for i := range mData {
 		if len(mData[i]) != nbCols {
-			panic("inconsistent number of columns in input data")
+			return nil, fmt.Errorf("inconsistent number of columns in row %d: expected %d, got %d", i, nbCols, len(mData[i]))
 		}
 		copiedMatrix[i] = make([]float64, nbCols)
 		copy(copiedMatrix[i], mData[i])
@@ -76,5 +85,5 @@ func NewFromData(mData [][]float64) *Matrix {
 		data:   copiedMatrix,
 		nbRows: nbRows,
 		nbCols: nbCols,
-	}
+	}, nil
 }
