@@ -2,6 +2,7 @@ package vector
 
 import (
 	"fmt"
+	"math"
 )
 
 // Vector type with dynamic size (dimension)
@@ -173,4 +174,35 @@ func (v *Vector) DivScalar(scalar float64) *Vector {
 	}
 
 	return resultVector
+}
+
+// Retrieves the norm (magnitude) of a vector
+func (v *Vector) Norm() float64 {
+	if v.dim == 0 {
+		return 0.0
+	}
+
+	sumSquares := 0.0
+	for i := 0; i < v.dim; i++ {
+		sumSquares += v.data[i] * v.data[i]
+	}
+
+	return math.Sqrt(sumSquares)
+}
+
+// Normalizes a vector (making it a unit vector)
+func (v *Vector) Normalize() *Vector {
+	norm := v.Norm()
+	return v.DivScalar(norm)
+}
+
+// Returns true if the vector calling this function is the zero vector
+func (v *Vector) IsZero() bool {
+	for i := 0; i < v.dim; i++ {
+		if v.GetElementAt(i) != 0.0 {
+			return false
+		}
+	}
+
+	return true
 }

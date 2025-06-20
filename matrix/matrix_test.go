@@ -9,9 +9,9 @@ import (
 func TestNew(t *testing.T) {
 	var newMatrix *Matrix = New(2, 2)
 
-	assert.Equal(t, newMatrix.nbCols, 2)
-	assert.Equal(t, newMatrix.nbRows, 2)
-	assert.Equal(t, [][]float64{{0.0, 0.0}, {0.0, 0.0}}, newMatrix.data)
+	assert.Equal(t, 2, newMatrix.nbCols)
+	assert.Equal(t, 2, newMatrix.nbRows)
+	assert.Equal(t, newMatrix.data, [][]float64{{0.0, 0.0}, {0.0, 0.0}})
 }
 
 func TestGetData(t *testing.T) {
@@ -19,27 +19,27 @@ func TestGetData(t *testing.T) {
 	newMatrix, err := NewFromData(data)
 
 	assert.NoError(t, err)
-	assert.Equal(t, newMatrix.GetData(), data)
+	assert.Equal(t, data, newMatrix.GetData())
 }
 
 func TestGetNbRows(t *testing.T) {
 	var newMatrix *Matrix = New(2, 2)
 
-	assert.Equal(t, newMatrix.GetNbRows(), 2)
+	assert.Equal(t, 2, newMatrix.GetNbRows())
 }
 
 func TestGetNbCols(t *testing.T) {
 	var newMatrix *Matrix = New(2, 2)
 
-	assert.Equal(t, newMatrix.GetNbCols(), 2)
+	assert.Equal(t, 2, newMatrix.GetNbCols())
 }
 
 func TestIsSquareMatrix(t *testing.T) {
 	var newMatrix *Matrix = New(2, 3)
 	var newSquareMatrix *Matrix = New(2, 2)
 
-	assert.Equal(t, newMatrix.IsSquareMatrix(), false)
-	assert.Equal(t, newSquareMatrix.IsSquareMatrix(), true)
+	assert.Equal(t, false, newMatrix.IsSquareMatrix())
+	assert.Equal(t, true, newSquareMatrix.IsSquareMatrix())
 }
 
 func TestSetElementAt(t *testing.T) {
@@ -50,7 +50,7 @@ func TestSetElementAt(t *testing.T) {
 	var newMatrix *Matrix = New(4, 4)
 	newMatrix.SetElementAt(row, col, elt)
 
-	assert.Equal(t, newMatrix.GetElementAt(row, col), elt)
+	assert.Equal(t, elt, newMatrix.GetElementAt(row, col))
 }
 
 func TestNewFromData_ValidInput(t *testing.T) {
