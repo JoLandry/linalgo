@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
@@ -269,4 +270,54 @@ func TestIsHollow_ShouldReturnFalse_ForNonSquareMatrix(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.False(t, m.IsHollow())
+}
+
+func TestIsIdentity_ShouldReturnTrue_On3x3IdentityMatrix(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{1, 0, 0},
+		{0, 1, 0},
+		{0, 0, 1},
+	})
+
+	require.NoError(t, err)
+	assert.True(t, m.IsIdentity())
+}
+
+func TestIsIdentity_ShouldReturnFalse_OnNonSquareMatrix(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{1, 0, 0},
+		{0, 1, 0},
+	})
+
+	require.NoError(t, err)
+	assert.False(t, m.IsIdentity())
+}
+
+func TestIsIdentity_ShouldReturnFalse_WhenDiagonalNot1(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{2, 0, 0},
+		{0, 1, 0},
+		{0, 0, 1},
+	})
+
+	require.NoError(t, err)
+	assert.False(t, m.IsIdentity())
+}
+
+func TestIsIdentity_ShouldReturnFalse_WhenOffDiagonalNot0(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{1, 1, 0},
+		{0, 1, 0},
+		{0, 0, 1},
+	})
+
+	require.NoError(t, err)
+	assert.False(t, m.IsIdentity())
+}
+
+func TestIsIdentity_ShouldReturnTrue_OnEmptyMatrix(t *testing.T) {
+	m, err := NewFromData([][]float64{})
+
+	require.NoError(t, err)
+	assert.True(t, m.IsIdentity())
 }

@@ -185,6 +185,33 @@ func (m *Matrix) IsHollow() bool {
 	return true
 }
 
+// Tells if a matrix is the identity matrix
+//
+// Returns true if so, false otherwise
+// By convention, a matrix with no row or column is an identity matrix
+func (m *Matrix) IsIdentity() bool {
+	if !m.IsSquareMatrix() {
+		return false
+	}
+	// By convention
+	if m.nbRows == 0 || m.nbCols == 0 {
+		return true
+	}
+
+	for i := 0; i < m.nbRows; i++ {
+		for j := 0; j < m.nbCols; j++ {
+			if i != j && m.data[i][j] != 0.0 {
+				return false
+			}
+			if i == j && m.data[i][j] != 1.0 {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
 /*
 func (m *Matrix) Mul(other *Matrix) (*Matrix, error) {
 
