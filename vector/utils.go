@@ -41,8 +41,8 @@ func AreColinear(v1 *Vector, v2 *Vector) bool {
 	// Check that it's the same factor (scalar) for every coordinate
 	var referenceFactor *float64 = nil
 	for i := 0; i < v1.dim; i++ {
-		a := v1.GetElementAt(i)
-		b := v2.GetElementAt(i)
+		a := v1.data[i]
+		b := v2.data[i]
 
 		if math.Abs(b) < epsilon {
 			if math.Abs(a) >= epsilon {
@@ -61,4 +61,32 @@ func AreColinear(v1 *Vector, v2 *Vector) bool {
 	}
 
 	return true
+}
+
+// Computes and returns the dot product between two vectors
+func DotProduct(v1 *Vector, v2 *Vector) (float64, error) {
+	if v1.dim != v2.dim {
+		return 0.0, fmt.Errorf("cannot compute dot products for vectors of different dimensions: %d vs %d", v1.dim, v2.dim)
+	}
+	sum := 0.0
+	for i := 0; i < v1.dim; i++ {
+		sum += v1.data[i] * v2.data[i]
+	}
+
+	return sum, nil
+}
+
+// Computes and returns the linear interpolation for two vectors
+// And a fraction, called t
+func Lerp(v1 *Vector, v2 *Vector, t float64) (*Vector, error) {
+	if v1.dim != v2.dim {
+		return nil, fmt.Errorf("cannot compute linear interpolation for vectors of different dimensions: %d vs %d", v1.dim, v2.dim)
+	}
+
+	result := make([]float64, v1.dim)
+	for i := 0; i < v1.dim; i++ {
+		result[i] = v1.data[i]*(1-t) + v2.data[i]*t
+	}
+
+	return NewFromData(result), nil
 }

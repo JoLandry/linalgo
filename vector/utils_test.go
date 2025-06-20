@@ -71,3 +71,43 @@ func TestAreColinear_ShouldReturnFalse_When_B_IsZero_And_A_NotZero(t *testing.T)
 
 	assert.False(t, AreColinear(v1, v2))
 }
+
+func TestDotProduct_ShouldSucceed(t *testing.T) {
+	v1 := NewFromData([]float64{1.0, 2.0})
+	v2 := NewFromData([]float64{1.0, 2.0})
+
+	result, err := DotProduct(v1, v2)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 5.0, result)
+}
+
+func TestDotProduct_ShouldFail_DifferentDimensions(t *testing.T) {
+	v1 := NewFromData([]float64{1.0, 2.0})
+	v2 := NewFromData([]float64{2.0})
+
+	_, err := DotProduct(v1, v2)
+
+	assert.Contains(t, err.Error(), "cannot compute dot products for vectors of different dimensions")
+}
+
+func TestLerp_ShouldFail_DifferentDimensions(t *testing.T) {
+	v1 := NewFromData([]float64{1.0, 2.0})
+	v2 := NewFromData([]float64{2.0})
+
+	_, err := Lerp(v1, v2, 2.0)
+
+	assert.Contains(t, err.Error(), "annot compute linear interpolation for vectors of different dimensions")
+}
+
+func TestLerp_ShouldSucceed(t *testing.T) {
+	v1 := NewFromData([]float64{1.0, 2.0})
+	v2 := NewFromData([]float64{2.0, 2.0})
+
+	tValue := 0.0
+	result, err := Lerp(v1, v2, tValue)
+	expected := NewFromData([]float64{1.0, 2.0})
+
+	assert.NoError(t, err)
+	assert.True(t, result.Equals(expected), "expected %v, got %v", expected.data, result.data)
+}
