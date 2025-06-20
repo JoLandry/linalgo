@@ -206,3 +206,21 @@ func (v *Vector) IsZero() bool {
 
 	return true
 }
+
+// Performs the projection of a vector to
+func (v *Vector) ProjectOnto(onto *Vector) (*Vector, error) {
+	if v.dim != onto.dim {
+		return nil, fmt.Errorf("cannot project vectors of different dimensions: %d vs %d", v.dim, onto.dim)
+	}
+
+	normSquared := onto.Norm()
+	if normSquared == 0.0 {
+		return nil, fmt.Errorf("cannot project onto the zero vector")
+	}
+	normSquared *= normSquared
+
+	dot, _ := DotProduct(v, onto)
+	scalar := dot / normSquared
+
+	return onto.MulScalar(scalar), nil
+}

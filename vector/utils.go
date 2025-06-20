@@ -78,6 +78,7 @@ func DotProduct(v1 *Vector, v2 *Vector) (float64, error) {
 
 // Computes and returns the linear interpolation for two vectors
 // And a fraction, called t
+// Returns an error if vectors of different dimensions
 func Lerp(v1 *Vector, v2 *Vector, t float64) (*Vector, error) {
 	if v1.dim != v2.dim {
 		return nil, fmt.Errorf("cannot compute linear interpolation for vectors of different dimensions: %d vs %d", v1.dim, v2.dim)
@@ -89,4 +90,46 @@ func Lerp(v1 *Vector, v2 *Vector, t float64) (*Vector, error) {
 	}
 
 	return NewFromData(result), nil
+}
+
+// Cross2D computes the 2D cross product (aka the perp dot product)
+// Returns a scalar representing the norm (magnitude) of the vector perpendicular to the plane formed by v1 and v2
+func Cross2D(v1 *Vector, v2 *Vector) (float64, error) {
+	if v1.dim != v2.dim {
+		return 0.0, fmt.Errorf("cannot perform cross2D operation for vectors of different dimensions: %d vs %d", v1.dim, v2.dim)
+	}
+	if v1.dim != 2 {
+		return 0.0, fmt.Errorf("cross2D operation only supports 2D vectors. Got dimension: %d", v1.dim)
+	}
+
+	// 2D cross product (scalar): x1*y2 - y1*x2
+	return v1.data[0]*v2.data[1] - v1.data[1]*v2.data[0], nil
+}
+
+// Utils function for floating verification
+func almostEqual(a, b, epsilon float64) bool {
+	return math.Abs(a-b) <= epsilon
+}
+
+// Utils function for floating verification
+func vectorsAlmostEqual(v1, v2 *Vector, epsilon float64) bool {
+	if v1.dim != v2.dim {
+		return false
+	}
+	for i := 0; i < v1.dim; i++ {
+		if !almostEqual(v1.data[i], v2.data[i], epsilon) {
+			return false
+		}
+	}
+	return true
+}
+
+// Tells if two vectors are orthogonal
+// Returns true if so, false otherwise
+func AreOrthogonal(v1 *Vector, v2 *Vector) bool {
+	result, err := DotProduct(v1, v2)
+	if err != nil {
+		return false
+	}
+	return result == 0.0
 }

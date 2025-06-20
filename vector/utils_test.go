@@ -111,3 +111,88 @@ func TestLerp_ShouldSucceed(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, result.Equals(expected), "expected %v, got %v", expected.data, result.data)
 }
+
+func TestCross2D_ShouldFail_DifferentDimensions(t *testing.T) {
+	v1 := NewFromData([]float64{1.0, 2.0})
+	v2 := NewFromData([]float64{2.0})
+
+	_, err := Cross2D(v1, v2)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot perform cross2D operation for vectors of different dimensions")
+}
+
+func TestCross2D_ShouldFail_Non2DVector(t *testing.T) {
+	v1 := NewFromData([]float64{1.0, 2.0, 3.0})
+	v2 := NewFromData([]float64{4.0, 5.0, 6.0})
+
+	_, err := Cross2D(v1, v2)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cross2D operation only supports 2D vectors.")
+}
+
+func TestCross2D_ShouldSucceed(t *testing.T) {
+	v1 := NewFromData([]float64{1.0, 2.0})
+	v2 := NewFromData([]float64{3.0, 4.0})
+
+	result, err := Cross2D(v1, v2)
+	expected := -2.0
+
+	assert.NoError(t, err)
+	assert.InEpsilon(t, expected, result, 1e-9, "expected %v, got %v", expected, result)
+}
+
+func TestAlmostEqual(t *testing.T) {
+	epsilon := 1e-9
+
+	// Exactly equal values
+	assert.True(t, almostEqual(1.0, 1.0, epsilon))
+	// Values within epsilon
+	assert.True(t, almostEqual(1.0, 1.0+1e-10, epsilon))
+	// Values outside epsilon
+	assert.False(t, almostEqual(1.0, 1.0+1e-7, epsilon))
+}
+
+func TestVectorsAlmostEqual(t *testing.T) {
+	epsilon := 1e-9
+
+	v1 := NewFromData([]float64{1.0, 2.0, 3.0})
+	v2 := NewFromData([]float64{1.0, 2.0, 3.0})
+	v3 := NewFromData([]float64{1.0, 2.0, 3.0000000001})
+	v4 := NewFromData([]float64{1.0, 2.0, 3.000001})
+	v5 := NewFromData([]float64{1.0, 2.0}) // different size
+
+	// Same vectors exactly
+	assert.True(t, vectorsAlmostEqual(v1, v2, epsilon))
+
+	// Slight difference within epsilon
+	assert.True(t, vectorsAlmostEqual(v1, v3, epsilon))
+
+	// Difference outside epsilon
+	assert.False(t, vectorsAlmostEqual(v1, v4, epsilon))
+
+	// Different dimensions
+	assert.False(t, vectorsAlmostEqual(v1, v5, epsilon))
+}
+
+func TestAreOrthogonal_ShouldBeTrue(t *testing.T) {
+	v1 := NewFromData([]float64{1.0, 0.0})
+	v2 := NewFromData([]float64{0.0, 1.0})
+
+	assert.Equal(t, true, AreOrthogonal(v1, v2))
+}
+
+func TestAreOrthogonal_ShouldBeFalse(t *testing.T) {
+	v1 := NewFromData([]float64{1.0, 5.0})
+	v2 := NewFromData([]float64{2.0, 1.0})
+
+	assert.Equal(t, false, AreOrthogonal(v1, v2))
+}
+
+func TestAreOrthogonal_ShouldFail_DifferentDimensions(t *testing.T) {
+	v1 := NewFromData([]float64{1.0, 0.0})
+	v2 := NewFromData([]float64{5.0})
+
+	assert.Equal(t, false, AreOrthogonal(v1, v2))
+}

@@ -248,3 +248,55 @@ func TestNormalize_NonUnitVector(t *testing.T) {
 	assert.InDelta(t, 0.6, normalized.GetElementAt(0), 1e-9)
 	assert.InDelta(t, 0.8, normalized.GetElementAt(1), 1e-9)
 }
+
+func TestProjectOnto_ShouldSucceed(t *testing.T) {
+	v := NewFromData([]float64{3.0, 4.0})
+	u := NewFromData([]float64{1.0, 0.0})
+
+	proj, err := v.ProjectOnto(u)
+
+	assert.NoError(t, err)
+	expected := NewFromData([]float64{3.0, 0.0})
+
+	assert.True(t, proj.Equals(expected), "expected %v, got %v", expected.data, proj.data)
+}
+
+func TestProjectOnto_ShouldFail_DifferentDimensions(t *testing.T) {
+	v := NewFromData([]float64{1.0, 2.0})
+	u := NewFromData([]float64{1.0})
+
+	_, err := v.ProjectOnto(u)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot project vectors of different dimensions")
+}
+
+func TestProjectOnto_ShouldFail_ZeroVector(t *testing.T) {
+	v := NewFromData([]float64{1.0, 2.0})
+	u := NewFromData([]float64{0.0, 0.0})
+
+	_, err := v.ProjectOnto(u)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot project onto the zero vector")
+}
+
+func TestProjectOnto_ShouldReturnZeroProjection_WhenVectorsAreOrthogonal(t *testing.T) {
+	v := NewFromData([]float64{0.0, 1.0})
+	u := NewFromData([]float64{1.0, 0.0})
+
+	proj, err := v.ProjectOnto(u)
+
+	assert.NoError(t, err)
+	expected := NewFromData([]float64{0.0, 0.0})
+	assert.True(t, proj.Equals(expected), "expected %v, got %v", expected.data, proj.data)
+}
+
+func TestProjectOnto_ProjectionOntoItself_ShouldReturnSameVector(t *testing.T) {
+	v := NewFromData([]float64{2.0, 5.0})
+
+	proj, err := v.ProjectOnto(v)
+
+	assert.NoError(t, err)
+	assert.True(t, vectorsAlmostEqual(proj, v, 1e-9), "expected %v, got %v", v.data, proj.data)
+}
