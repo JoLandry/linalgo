@@ -87,3 +87,110 @@ func NewFromData(mData [][]float64) (*Matrix, error) {
 		nbCols: nbCols,
 	}, nil
 }
+
+// Tells if a matrix is a zero matrix
+//
+// Returns true if so, else otherwise
+func (m *Matrix) IsZero() bool {
+	for i := 0; i < m.nbRows; i++ {
+		for j := 0; j < m.nbCols; j++ {
+			if m.data[i][j] != 0 {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+// Performs the addition between two matrices and returns the resulting one
+//
+// Returns an error if both matrices do not share the same number of rows or columns
+func (m *Matrix) Add(other *Matrix) (*Matrix, error) {
+	if m.nbRows != other.nbRows || m.nbCols != other.nbCols {
+		return nil, fmt.Errorf("mismatch in the number of rows or columns between matrices, cannot perform addition")
+	}
+
+	result := New(m.nbRows, m.nbCols)
+	for i := 0; i < m.nbRows; i++ {
+		for j := 0; j < m.nbCols; j++ {
+			result.data[i][j] = m.data[i][j] + other.data[i][j]
+		}
+	}
+
+	return result, nil
+}
+
+// Performs the substraction between two matrices and returns the resulting one
+//
+// Returns an error if both matrices do not share the same number of rows or columns
+func (m *Matrix) Sub(other *Matrix) (*Matrix, error) {
+	if m.nbRows != other.nbRows || m.nbCols != other.nbCols {
+		return nil, fmt.Errorf("mismatch in the number of rows or columns between matrices, cannot perform substraction")
+	}
+
+	result := New(m.nbRows, m.nbCols)
+	for i := 0; i < m.nbRows; i++ {
+		for j := 0; j < m.nbCols; j++ {
+			result.data[i][j] = m.data[i][j] - other.data[i][j]
+		}
+	}
+
+	return result, nil
+}
+
+// Tells if a matrix is a diagonal matrix
+//
+// Returns true if so, false otherwise
+// By convention, a matrix with no row or column is a diagonal matrix
+func (m *Matrix) IsDiagonal() bool {
+	if !m.IsSquareMatrix() {
+		return false
+	}
+	// By convention
+	if m.nbRows == 0 || m.nbCols == 0 {
+		return true
+	}
+
+	for i := 0; i < m.nbRows; i++ {
+		for j := 0; j < m.nbCols; j++ {
+			if i != j && m.data[i][j] != 0.0 {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+// Tells if a matrix is a hollow matrix
+//
+// Returns true if so, false otherwise
+// By convention, a matrix with no row or column is a hollow matrix
+func (m *Matrix) IsHollow() bool {
+	if !m.IsSquareMatrix() {
+		return false
+	}
+	// By convention
+	if m.nbRows == 0 || m.nbCols == 0 {
+		return true
+	}
+
+	for i := 0; i < m.nbRows; i++ {
+		if m.data[i][i] != 0.0 {
+			return false
+		}
+	}
+
+	return true
+}
+
+/*
+func (m *Matrix) Mul(other *Matrix) (*Matrix, error) {
+
+}
+
+func (m *Matrix) Div(other *Matrix) (*Matrix, error) {
+
+}
+*/

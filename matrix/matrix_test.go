@@ -94,3 +94,179 @@ func TestNewFromData_InconsistentCols_ReturnsError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "inconsistent number of columns")
 }
+
+func TestIsZero_ShouldBeTrue(t *testing.T) {
+	var newMatrix *Matrix = New(2, 3)
+
+	assert.Equal(t, true, newMatrix.IsZero())
+}
+
+func TestIsZero_ShouldBeFalse(t *testing.T) {
+	var newMatrix *Matrix = New(2, 3)
+	newMatrix.data[0][0] = 1.0
+
+	assert.Equal(t, false, newMatrix.IsZero())
+}
+
+func TestMatrix_Add_Success(t *testing.T) {
+	m1, err1 := NewFromData([][]float64{
+		{1, 2},
+		{3, 4},
+	})
+	m2, err2 := NewFromData([][]float64{
+		{5, 6},
+		{7, 8},
+	})
+
+	assert.NoError(t, err1)
+	assert.NoError(t, err2)
+
+	result, err := m1.Add(m2)
+	assert.NoError(t, err)
+
+	expected, errExpected := NewFromData([][]float64{
+		{6, 8},
+		{10, 12},
+	})
+	assert.NoError(t, errExpected)
+
+	assert.Equal(t, expected.data, result.data)
+}
+
+func TestMatrix_Add_DimensionMismatch_ShouldFail(t *testing.T) {
+	m1, err1 := NewFromData([][]float64{
+		{1, 2},
+	})
+	m2, err2 := NewFromData([][]float64{
+		{3, 4},
+		{5, 6},
+	})
+
+	assert.NoError(t, err1)
+	assert.NoError(t, err2)
+
+	_, err := m1.Add(m2)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "mismatch in the number of rows or columns")
+}
+
+func TestMatrix_Sub_Success(t *testing.T) {
+	m1, err1 := NewFromData([][]float64{
+		{9, 8},
+		{7, 6},
+	})
+	m2, err2 := NewFromData([][]float64{
+		{1, 2},
+		{3, 4},
+	})
+
+	assert.NoError(t, err1)
+	assert.NoError(t, err2)
+
+	result, err := m1.Sub(m2)
+	assert.NoError(t, err)
+
+	expected, errExpected := NewFromData([][]float64{
+		{8, 6},
+		{4, 2},
+	})
+	assert.NoError(t, errExpected)
+
+	assert.Equal(t, expected.data, result.data)
+}
+
+func TestMatrix_Sub_DimensionMismatch_ShouldFail(t *testing.T) {
+	m1, err1 := NewFromData([][]float64{
+		{1, 2, 3},
+	})
+	m2, err2 := NewFromData([][]float64{
+		{4, 5},
+	})
+
+	assert.NoError(t, err1)
+	assert.NoError(t, err2)
+
+	_, err := m1.Sub(m2)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "mismatch in the number of rows or columns")
+}
+
+func TestIsDiagonal_ShouldReturnTrue_ForEmptyMatrix(t *testing.T) {
+	m, err := NewFromData([][]float64{})
+
+	assert.NoError(t, err)
+	assert.True(t, m.IsDiagonal())
+}
+
+func TestIsDiagonal_ShouldReturnTrue_ForValidDiagonal(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{1, 0, 0},
+		{0, 2, 0},
+		{0, 0, 3},
+	})
+
+	assert.NoError(t, err)
+	assert.True(t, m.IsDiagonal())
+}
+
+func TestIsDiagonal_ShouldReturnFalse_ForNonSquareMatrix(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{1, 0, 0},
+		{0, 2, 0},
+	})
+
+	assert.NoError(t, err)
+	assert.False(t, m.IsDiagonal())
+}
+
+func TestIsDiagonal_ShouldReturnFalse_IfNonDiagonalElementIsNonZero(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{1, 2, 0},
+		{0, 2, 0},
+		{0, 0, 3},
+	})
+
+	assert.NoError(t, err)
+	assert.False(t, m.IsDiagonal())
+}
+
+func TestIsHollow_ShouldReturnTrue_ForEmptyMatrix(t *testing.T) {
+	m, err := NewFromData([][]float64{})
+
+	assert.NoError(t, err)
+	assert.True(t, m.IsHollow())
+}
+
+func TestIsHollow_ShouldReturnTrue_WhenAllDiagonalElementsAreZero(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{0, 1, 2},
+		{3, 0, 4},
+		{5, 6, 0},
+	})
+
+	assert.NoError(t, err)
+	assert.True(t, m.IsHollow())
+}
+
+func TestIsHollow_ShouldReturnFalse_IfOneDiagonalElementIsNonZero(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{0, 1, 2},
+		{3, 9, 4},
+		{5, 6, 0},
+	})
+
+	assert.NoError(t, err)
+	assert.False(t, m.IsHollow())
+}
+
+func TestIsHollow_ShouldReturnFalse_ForNonSquareMatrix(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{0, 1},
+		{1, 0},
+		{2, 2},
+	})
+
+	assert.NoError(t, err)
+	assert.False(t, m.IsHollow())
+}
