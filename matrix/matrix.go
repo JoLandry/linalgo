@@ -2,6 +2,7 @@ package matrix
 
 import (
 	"fmt"
+	"math"
 )
 
 type Matrix struct {
@@ -86,6 +87,25 @@ func NewFromData(mData [][]float64) (*Matrix, error) {
 		nbRows: nbRows,
 		nbCols: nbCols,
 	}, nil
+}
+
+// Creates a new identity matrix from a given size
+func NewIdentity(size int) *Matrix {
+	data := make([][]float64, size)
+	for i := range data {
+		data[i] = make([]float64, size)
+	}
+	idMatrix := &Matrix{
+		data:   data,
+		nbRows: size,
+		nbCols: size,
+	}
+
+	for k := 0; k < size; k++ {
+		data[k][k] = 1.0
+	}
+
+	return idMatrix
 }
 
 // Tells if a matrix is a zero matrix
@@ -317,8 +337,222 @@ func (m *Matrix) getMinor(rowToRemove, colToRemove int) *Matrix {
 	return minor
 }
 
-/*
-func (m *Matrix) Div(other *Matrix) (*Matrix, error) {
+// Returns a new matrix in Row Echelon Form (REF)
+// Uses Gaussian elimination
+//
+// This function does not modify the original matrix
+func (m *Matrix) ToRowEchelon() *Matrix {
+	if m.nbRows == 0 || m.nbCols == 0 {
+		return New(m.nbRows, m.nbCols)
+	}
 
+	// Copy matrix
+	ref, err := NewFromData(m.data)
+	if err != nil {
+		panic(fmt.Sprintf("invalid matrix data: %v", err))
+	}
+
+	row := 0
+	for col := 0; col < ref.nbCols && row < ref.nbRows; col++ {
+		// Find pivot in the current column
+		pivotRow := -1
+		for r := row; r < ref.nbRows; r++ {
+			if math.Abs(ref.data[r][col]) > 1e-10 {
+				pivotRow = r
+				// Pivot found so break here
+				break
+			}
+		}
+
+		// Skip column if all entries are zero
+		if pivotRow == -1 {
+			continue
+		}
+		// Swap current row with pivot row
+		if pivotRow != row {
+			ref.data[row], ref.data[pivotRow] = ref.data[pivotRow], ref.data[row]
+		}
+		// Eliminate below
+		for r := row + 1; r < ref.nbRows; r++ {
+			factor := ref.data[r][col] / ref.data[row][col]
+			for c := col; c < ref.nbCols; c++ {
+				ref.data[r][c] -= factor * ref.data[row][c]
+			}
+		}
+		row++
+	}
+
+	return ref
 }
-*/
+
+// Returns the rank of matrix
+func (m *Matrix) Rank() int {
+	ref := m.ToRowEchelon()
+	rank := 0
+	for _, row := range ref.data {
+		notZero := false
+		for _, val := range row {
+			if math.Abs(val) > 1e-10 {
+				notZero = true
+				break
+			}
+		}
+		if notZero {
+			rank++
+		}
+	}
+
+	return rank
+}
+
+// Tells if a matrix is said "full rank"
+//
+// Namely if its rank is the highest possible for a matrix of the same size
+func (m *Matrix) IsFullRank() bool {
+	rank := m.Rank()
+	min := min(m.nbRows, m.nbCols)
+
+	return rank == min
+}
+
+// Tells if a matrix is invertible
+//
+// Namely:
+//   - it is full rank
+//   - it is squared
+//   - its determinant is not zero
+func (m *Matrix) IsInvertible() bool {
+	// Check if is full rank
+	if !m.IsFullRank() {
+		return false
+	}
+	// Must be squared
+	if !m.IsSquareMatrix() {
+		return false
+	}
+	// Determinant must be non-zero
+	determinant, err := m.Determinant()
+	if err != nil || math.Abs(determinant) < 1e-10 {
+		return false
+	}
+
+	return true
+}
+
+// Returns the inverse of the matrix if it exists
+//
+// It returns an error if the matrix is singular (non-invertible) or not square
+// For 2x2 matrices, it uses the direct "closed-form" formula
+// For larger matrices, it uses Gaussian elimination with pivoting
+//
+// The original matrix is not modified
+func (m *Matrix) Invert() (*Matrix, error) {
+	if !m.IsInvertible() {
+		return nil, fmt.Errorf("matrix is singular, cannot invert")
+
+	}
+	if !m.IsSquareMatrix() {
+		return nil, fmt.Errorf("matrix is not squared, it cannot be inverted")
+	}
+	// 2x2 matrix
+	if m.nbCols == 2 {
+		a := m.data[0][0]
+		b := m.data[0][1]
+		c := m.data[1][0]
+		d := m.data[1][1]
+		det := a*d - b*c
+		if math.Abs(det) < 1e-10 {
+			return nil, fmt.Errorf("matrix determinant is zero, cannot invert")
+		}
+		invDet := 1.0 / det
+		return NewFromData([][]float64{
+			{d * invDet, -b * invDet},
+			{-c * invDet, a * invDet},
+		})
+	}
+	// General case
+	matrixCopy, err := NewFromData(m.data)
+	if err != nil {
+		return nil, fmt.Errorf("invalid matrix: %w", err)
+	}
+	// Start with identity matrix that will be transformed into inverse at the end of the algorithm
+	invMatrix := NewIdentity(m.nbRows)
+
+	n := m.nbRows
+	for i := 0; i < n; i++ {
+		// Find pivot element (max absolute value in column i at or below row i)
+		pivot := i
+		maxVal := math.Abs(matrixCopy.data[i][i])
+		for r := i + 1; r < n; r++ {
+			if math.Abs(matrixCopy.data[r][i]) > maxVal {
+				maxVal = math.Abs(matrixCopy.data[r][i])
+				pivot = r
+			}
+		}
+
+		// Matrix cannot be inverted
+		if maxVal < 1e-10 {
+			return nil, fmt.Errorf("matrix is singular, cannot invert")
+		}
+
+		// Swap rows in both matrixCopy and invMatrix if needed
+		if pivot != i {
+			matrixCopy.data[i], matrixCopy.data[pivot] = matrixCopy.data[pivot], matrixCopy.data[i]
+			invMatrix.data[i], invMatrix.data[pivot] = invMatrix.data[pivot], invMatrix.data[i]
+		}
+
+		// Normalize pivot row
+		pivotVal := matrixCopy.data[i][i]
+		for col := 0; col < n; col++ {
+			matrixCopy.data[i][col] /= pivotVal
+			invMatrix.data[i][col] /= pivotVal
+		}
+
+		// Eliminate all other rows
+		for row := 0; row < n; row++ {
+			if row != i {
+				factor := matrixCopy.data[row][i]
+				for col := 0; col < n; col++ {
+					matrixCopy.data[row][col] -= factor * matrixCopy.data[i][col]
+					invMatrix.data[row][col] -= factor * invMatrix.data[i][col]
+				}
+			}
+		}
+	}
+
+	return invMatrix, nil
+}
+
+// Performs division between two matrices and returns the resulting one
+//
+// In other words, performs multiplication between the matrix, and the inverse of the given one
+func (m *Matrix) Div(other *Matrix) (*Matrix, error) {
+	invert, err := other.Invert()
+	if err != nil {
+		return nil, fmt.Errorf("could not perform matrix division because given matrix cannot be inverted")
+	}
+	result, err := m.Mul(invert)
+	if err != nil {
+		return nil, fmt.Errorf("could not perform matrix multiplication")
+	}
+
+	return result, nil
+}
+
+// Helper method that compares two matrices for approximate equality (float64 type)
+//
+// It returns true if both matrices have the same dimensions and each pair of
+// corresponding elements differ by no more than the specified epsilon value
+func (m *Matrix) EqualsApprox(other *Matrix, epsilon float64) bool {
+	if m.nbRows != other.nbRows || m.nbCols != other.nbCols {
+		return false
+	}
+	for i := 0; i < m.nbRows; i++ {
+		for j := 0; j < m.nbCols; j++ {
+			if math.Abs(m.data[i][j]-other.data[i][j]) > epsilon {
+				return false
+			}
+		}
+	}
+	return true
+}

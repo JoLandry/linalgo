@@ -502,3 +502,185 @@ func TestDeterminant_ZeroMatrix_ShouldReturnZero(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 0.0, det)
 }
+
+func TestInvert_ShouldSucceed_2x2(t *testing.T) {
+	m, _ := NewFromData([][]float64{
+		{4, 7},
+		{2, 6},
+	})
+
+	inv, err := m.Invert()
+
+	expected, _ := NewFromData([][]float64{
+		{0.6, -0.7},
+		{-0.2, 0.4},
+	})
+
+	assert.NoError(t, err)
+	assert.True(t, inv.EqualsApprox(expected, 1e-9), "expected %v, got %v", expected, inv)
+}
+
+func TestInvert_ShouldFail_SingularMatrix(t *testing.T) {
+	m, _ := NewFromData([][]float64{
+		{1, 2},
+		{2, 4},
+	})
+
+	_, err := m.Invert()
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "singular")
+}
+
+func TestInvert_ShouldSucceed_3x3(t *testing.T) {
+	m, _ := NewFromData([][]float64{
+		{2, -1, 0},
+		{-1, 2, -1},
+		{0, -1, 2},
+	})
+
+	inv, err := m.Invert()
+
+	expected, _ := NewFromData([][]float64{
+		{0.75, 0.5, 0.25},
+		{0.5, 1.0, 0.5},
+		{0.25, 0.5, 0.75},
+	})
+
+	assert.NoError(t, err)
+	assert.True(t, inv.EqualsApprox(expected, 1e-9), "expected %v, got %v", expected, inv)
+}
+
+func TestDiv_ShouldSucceed(t *testing.T) {
+	a, _ := NewFromData([][]float64{
+		{3, 3},
+		{2, 1},
+	})
+	b, _ := NewFromData([][]float64{
+		{1, 2},
+		{1, 1},
+	})
+
+	result, err := a.Div(b)
+
+	expected, _ := NewFromData([][]float64{
+		{0, 3},
+		{-1, 3},
+	})
+
+	assert.NoError(t, err)
+	assert.True(t, result.EqualsApprox(expected, 1e-9), "expected %v, got %v", expected, result)
+}
+
+func TestDiv_ShouldFail_NonInvertible(t *testing.T) {
+	a, _ := NewFromData([][]float64{
+		{1, 2},
+		{3, 4},
+	})
+	b, _ := NewFromData([][]float64{
+		{2, 4},
+		{1, 2},
+	})
+	// singular
+
+	_, err := a.Div(b)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot be inverted")
+}
+
+func TestToRowEchelon_ShouldSucceed(t *testing.T) {
+	matrix, _ := NewFromData([][]float64{
+		{1, 2, -1, -4},
+		{2, 3, -1, -11},
+		{-2, 0, -3, 22},
+	})
+
+	expectedREF, _ := NewFromData([][]float64{
+		{1, 2, -1, -4},
+		{0, -1, 1, -3},
+		{0, 0, -1, 2},
+	})
+
+	result := matrix.ToRowEchelon()
+
+	if !result.EqualsApprox(expectedREF, 1e-9) {
+		t.Errorf("expected REF %v, got %v", expectedREF, result)
+	}
+}
+
+func TestToRowEchelon_ZeroMatrix(t *testing.T) {
+	matrix, _ := NewFromData([][]float64{
+		{0, 0},
+		{0, 0},
+	})
+	expected, _ := NewFromData([][]float64{
+		{0, 0},
+		{0, 0},
+	})
+
+	ref := matrix.ToRowEchelon()
+	if !ref.EqualsApprox(expected, 1e-9) {
+		t.Errorf("expected zero matrix, got %v", ref)
+	}
+}
+
+func TestRank_ShouldBeCorrect(t *testing.T) {
+	matrix, _ := NewFromData([][]float64{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
+	})
+
+	// This matrix has rank 2
+	rank := matrix.Rank()
+	if rank != 2 {
+		t.Errorf("expected rank 2, got %d", rank)
+	}
+}
+
+func TestRank_ZeroMatrix(t *testing.T) {
+	matrix, _ := NewFromData([][]float64{
+		{0, 0},
+		{0, 0},
+	})
+
+	rank := matrix.Rank()
+	if rank != 0 {
+		t.Errorf("expected rank 0, got %d", rank)
+	}
+}
+
+func TestIsFullRank_ShouldReturnTrue(t *testing.T) {
+	matrix, _ := NewFromData([][]float64{
+		{1, 2},
+		{3, 4},
+	})
+
+	if !matrix.IsFullRank() {
+		t.Errorf("expected matrix to be full rank")
+	}
+}
+
+func TestIsFullRank_ShouldReturnFalse(t *testing.T) {
+	matrix, _ := NewFromData([][]float64{
+		{1, 2},
+		{2, 4},
+	})
+
+	if matrix.IsFullRank() {
+		t.Errorf("expected matrix NOT to be full rank")
+	}
+}
+
+func TestRank_NonSquareMatrix(t *testing.T) {
+	matrix, _ := NewFromData([][]float64{
+		{1, 2, 3},
+		{4, 5, 6},
+	})
+
+	rank := matrix.Rank()
+	if rank != 2 {
+		t.Errorf("expected rank 2 for full row-rank 2x3 matrix, got %d", rank)
+	}
+}
