@@ -321,3 +321,184 @@ func TestIsIdentity_ShouldReturnTrue_OnEmptyMatrix(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, m.IsIdentity())
 }
+
+func TestMulScalar_ZeroMatrix(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{0, 0, 0},
+		{0, 0, 0},
+		{0, 0, 0},
+	})
+
+	require.NoError(t, err)
+	assert.Equal(t, m, m.MulScalar(2))
+}
+
+func TestMulScalar_ScalarValueIsOne(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{0, 0, 0},
+		{0, 0, 0},
+		{0, 0, 0},
+	})
+
+	require.NoError(t, err)
+	assert.Equal(t, m, m.MulScalar(1))
+}
+
+func TestMulScalar_ShouldSucceed(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{2, 2, 2},
+		{2, 2, 2},
+		{2, 2, 2},
+	})
+
+	expected, err2 := NewFromData([][]float64{
+		{4, 4, 4},
+		{4, 4, 4},
+		{4, 4, 4},
+	})
+
+	require.NoError(t, err)
+	require.NoError(t, err2)
+	assert.Equal(t, expected.data, m.MulScalar(2).data)
+}
+
+func TestMul_ShouldSucceed(t *testing.T) {
+	m1, _ := NewFromData([][]float64{
+		{1, 2, 3},
+		{4, 5, 6},
+	})
+	m2, _ := NewFromData([][]float64{
+		{7, 8},
+		{9, 10},
+		{11, 12},
+	})
+
+	expected, _ := NewFromData([][]float64{
+		{58, 64},
+		{139, 154},
+	})
+
+	result, err := m1.Mul(m2)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected.data, result.data)
+}
+
+func TestMul_ShouldFail_DimensionMismatch(t *testing.T) {
+	m1, _ := NewFromData([][]float64{
+		{1, 2},
+		{3, 4},
+	})
+	m2, _ := NewFromData([][]float64{
+		{5, 6},
+		{7, 8},
+		{9, 10},
+	})
+
+	_, err := m1.Mul(m2)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "mismatch between number of columns of first matrix")
+}
+
+func TestMul_WithZeroMatrix_ShouldReturnZeroMatrix(t *testing.T) {
+	m1, _ := NewFromData([][]float64{
+		{1, 2},
+		{3, 4},
+	})
+	zero, _ := NewFromData([][]float64{
+		{0, 0},
+		{0, 0},
+	})
+
+	result, err := m1.Mul(zero)
+
+	assert.NoError(t, err)
+	expected, _ := NewFromData([][]float64{
+		{0, 0},
+		{0, 0},
+	})
+	assert.Equal(t, expected.data, result.data)
+}
+
+func TestDeterminant_ShouldFail_NonSquareMatrix(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{1, 2, 3},
+		{4, 5, 6},
+	})
+	assert.NoError(t, err)
+
+	_, detErr := m.Determinant()
+	assert.Error(t, detErr)
+	assert.Contains(t, detErr.Error(), "cannot compute the determinant of a non-square matrix")
+}
+
+func TestDeterminant_EmptyMatrix_ShouldReturnZero(t *testing.T) {
+	m, err := NewFromData([][]float64{})
+	assert.NoError(t, err)
+
+	det, err := m.Determinant()
+	assert.NoError(t, err)
+	assert.Equal(t, 0.0, det)
+}
+
+func TestDeterminant_1x1Matrix(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{5},
+	})
+	assert.NoError(t, err)
+
+	det, err := m.Determinant()
+	assert.NoError(t, err)
+	assert.Equal(t, 5.0, det)
+}
+
+func TestDeterminant_2x2Matrix(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{4, 6},
+		{3, 8},
+	})
+	assert.NoError(t, err)
+
+	det, err := m.Determinant()
+	assert.NoError(t, err)
+	assert.Equal(t, 14.0, det)
+}
+
+func TestDeterminant_3x3Matrix(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{6, 1, 1},
+		{4, -2, 5},
+		{2, 8, 7},
+	})
+	assert.NoError(t, err)
+
+	det, err := m.Determinant()
+	assert.NoError(t, err)
+	assert.Equal(t, -306.0, det)
+}
+
+func TestDeterminant_IdentityMatrix_ShouldReturnOne(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{1, 0, 0},
+		{0, 1, 0},
+		{0, 0, 1},
+	})
+	assert.NoError(t, err)
+
+	det, err := m.Determinant()
+	assert.NoError(t, err)
+	assert.Equal(t, 1.0, det)
+}
+
+func TestDeterminant_ZeroMatrix_ShouldReturnZero(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{0, 0},
+		{0, 0},
+	})
+	assert.NoError(t, err)
+
+	det, err := m.Determinant()
+	assert.NoError(t, err)
+	assert.Equal(t, 0.0, det)
+}
