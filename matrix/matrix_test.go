@@ -885,3 +885,74 @@ func TestPow_ShouldFail_NonInvertibleMatrix(t *testing.T) {
 		t.Errorf("expected error for non-invertible matrix, got none")
 	}
 }
+
+func TestMatrix_Transpose_Rectangular(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{1, 2, 3},
+		{4, 5, 6},
+	})
+	assert.NoError(t, err)
+
+	expected, errExpected := NewFromData([][]float64{
+		{1, 4},
+		{2, 5},
+		{3, 6},
+	})
+	assert.NoError(t, errExpected)
+
+	result := m.Transpose()
+
+	assert.Equal(t, expected.data, result.data)
+	assert.Equal(t, expected.nbRows, result.nbRows)
+	assert.Equal(t, expected.nbCols, result.nbCols)
+}
+
+func TestMatrix_Transpose_Square(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
+	})
+	assert.NoError(t, err)
+
+	expected, errExpected := NewFromData([][]float64{
+		{1, 4, 7},
+		{2, 5, 8},
+		{3, 6, 9},
+	})
+	assert.NoError(t, errExpected)
+
+	result := m.Transpose()
+
+	assert.Equal(t, expected.data, result.data)
+}
+
+func TestMatrix_Transpose_RowVector(t *testing.T) {
+	m, err := NewFromData([][]float64{
+		{1, 2, 3, 4},
+	})
+	assert.NoError(t, err)
+
+	expected, errExpected := NewFromData([][]float64{
+		{1},
+		{2},
+		{3},
+		{4},
+	})
+	assert.NoError(t, errExpected)
+
+	result := m.Transpose()
+
+	assert.Equal(t, expected.data, result.data)
+}
+
+func TestMatrix_Transpose_EmptyMatrix(t *testing.T) {
+	m, err := NewFromData([][]float64{})
+	assert.NoError(t, err)
+
+	result := m.Transpose()
+
+	assert.Equal(t, 0, result.nbRows)
+	assert.Equal(t, 0, result.nbCols)
+	assert.Empty(t, result.data)
+}

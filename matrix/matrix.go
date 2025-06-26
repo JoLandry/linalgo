@@ -625,3 +625,19 @@ func (m *Matrix) Pow(power int) (*Matrix, error) {
 
 	return result, nil
 }
+
+// Returns the transpose of the matrix (rows become columns and vice versa)
+func (m *Matrix) Transpose() *Matrix {
+	if m.nbRows == 0 || m.nbCols == 0 {
+		return New(0, 0)
+	}
+
+	result := New(m.nbCols, m.nbRows)
+	for i := 0; i < m.nbRows; i++ {
+		for j := 0; j < m.nbCols; j++ {
+			result.data[j][i] = m.data[i][j]
+		}
+	}
+
+	return result
+}
