@@ -39,8 +39,8 @@ func TestIsSquareMatrix(t *testing.T) {
 	var newMatrix *Matrix = New(2, 3)
 	var newSquareMatrix *Matrix = New(2, 2)
 
-	assert.Equal(t, false, newMatrix.IsSquareMatrix())
-	assert.Equal(t, true, newSquareMatrix.IsSquareMatrix())
+	assert.Equal(t, false, newMatrix.IsSquare())
+	assert.Equal(t, true, newSquareMatrix.IsSquare())
 }
 
 func TestSetElementAt(t *testing.T) {
@@ -107,6 +107,88 @@ func TestIsZero_ShouldBeFalse(t *testing.T) {
 	newMatrix.data[0][0] = 1.0
 
 	assert.Equal(t, false, newMatrix.IsZero())
+}
+
+func TestIsScalar_ShouldReturnTrue(t *testing.T) {
+	matrix, err := NewFromData([][]float64{
+		{5, 0, 0},
+		{0, 5, 0},
+		{0, 0, 5},
+	})
+	if err != nil {
+		t.Fatalf("Failed to create matrix: %v", err)
+	}
+
+	if !matrix.IsScalar(5) {
+		t.Errorf("Expected IsScalar(5) to return true")
+	}
+}
+
+func TestIsScalar_ShouldReturnFalse_DiagonalNotSame(t *testing.T) {
+	matrix, err := NewFromData([][]float64{
+		{5, 0, 0},
+		{0, 4, 0},
+		{0, 0, 5},
+	})
+	if err != nil {
+		t.Fatalf("Failed to create matrix: %v", err)
+	}
+
+	if matrix.IsScalar(5) {
+		t.Errorf("Expected IsScalar(5) to return false (non-uniform diagonal)")
+	}
+}
+
+func TestIsScalar_ShouldReturnFalse_OffDiagonalNonZero(t *testing.T) {
+	matrix, err := NewFromData([][]float64{
+		{5, 1, 0},
+		{0, 5, 0},
+		{0, 0, 5},
+	})
+	if err != nil {
+		t.Fatalf("Failed to create matrix: %v", err)
+	}
+
+	if matrix.IsScalar(5) {
+		t.Errorf("Expected IsScalar(5) to return false (non-zero off-diagonal)")
+	}
+}
+
+func TestIsScalar_EmptyMatrix(t *testing.T) {
+	matrix := New(0, 0)
+
+	if !matrix.IsScalar(42) {
+		t.Errorf("Expected IsScalar on empty matrix to return true (by convention)")
+	}
+}
+
+func TestIsScalar_NonSquareMatrix(t *testing.T) {
+	matrix, err := NewFromData([][]float64{
+		{5, 0},
+		{0, 5},
+		{0, 0},
+	})
+	if err != nil {
+		t.Fatalf("Failed to create matrix: %v", err)
+	}
+
+	if matrix.IsScalar(5) {
+		t.Errorf("Expected IsScalar on non-square matrix to return false")
+	}
+}
+
+func TestIsScalar_ZeroMatrixWithScalarZero(t *testing.T) {
+	matrix, err := NewFromData([][]float64{
+		{0, 0},
+		{0, 0},
+	})
+	if err != nil {
+		t.Fatalf("Failed to create matrix: %v", err)
+	}
+
+	if !matrix.IsScalar(0) {
+		t.Errorf("Expected IsScalar(0) to return true on zero matrix")
+	}
 }
 
 func TestMatrix_Add_Success(t *testing.T) {
@@ -682,5 +764,124 @@ func TestRank_NonSquareMatrix(t *testing.T) {
 	rank := matrix.Rank()
 	if rank != 2 {
 		t.Errorf("expected rank 2 for full row-rank 2x3 matrix, got %d", rank)
+	}
+}
+
+func TestPow_ZeroPower_ShouldReturnIdentity(t *testing.T) {
+	m, _ := NewFromData([][]float64{
+		{2, 3},
+		{1, 4},
+	})
+
+	result, err := m.Pow(0)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := NewIdentity(2)
+
+	if !result.EqualsApprox(expected, 1e-6) {
+		t.Errorf("expected identity matrix, got %v", result)
+	}
+}
+
+func TestPow_OnePower_ShouldReturnSelf(t *testing.T) {
+	m, _ := NewFromData([][]float64{
+		{2, 3},
+		{1, 4},
+	})
+
+	result, err := m.Pow(1)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !result.EqualsApprox(m, 1e-6) {
+		t.Errorf("expected original matrix, got %v", result)
+	}
+}
+
+func TestPow_PositivePower_ShouldSucceed(t *testing.T) {
+	m, _ := NewFromData([][]float64{
+		{1, 1},
+		{1, 0},
+	})
+
+	result, err := m.Pow(3)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// A^3
+	expected, _ := NewFromData([][]float64{
+		{3, 2},
+		{2, 1},
+	})
+
+	if !result.EqualsApprox(expected, 1e-6) {
+		t.Errorf("expected %v, got %v", expected, result)
+	}
+}
+
+func TestPow_NegativePower_ShouldSucceed(t *testing.T) {
+	m, _ := NewFromData([][]float64{
+		{4, 7},
+		{2, 6},
+	})
+
+	result, err := m.Pow(-1)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	inverse, _ := m.Invert()
+	if !result.EqualsApprox(inverse, 1e-6) {
+		t.Errorf("expected inverse matrix, got %v", result)
+	}
+}
+
+func TestPow_NegativePowerGreaterThanOne(t *testing.T) {
+	m, _ := NewFromData([][]float64{
+		{2, 0},
+		{0, 0.5},
+	})
+
+	result, err := m.Pow(-2)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected, _ := NewFromData([][]float64{
+		{0.25, 0},
+		{0, 4},
+	})
+
+	if !result.EqualsApprox(expected, 1e-6) {
+		t.Errorf("expected %v, got %v", expected, result)
+	}
+}
+
+func TestPow_ShouldFail_NonSquareMatrix(t *testing.T) {
+	m, _ := NewFromData([][]float64{
+		{1, 2, 3},
+		{4, 5, 6},
+	})
+
+	_, err := m.Pow(2)
+	if err == nil {
+		t.Errorf("expected error for non-square matrix, got none")
+	}
+}
+
+func TestPow_ShouldFail_NonInvertibleMatrix(t *testing.T) {
+	// Singular matrix
+	m, _ := NewFromData([][]float64{
+		{2, 4},
+		{1, 2},
+	})
+
+	_, err := m.Pow(-3)
+	if err == nil {
+		t.Errorf("expected error for non-invertible matrix, got none")
 	}
 }

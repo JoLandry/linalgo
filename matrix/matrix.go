@@ -27,7 +27,7 @@ func (m *Matrix) GetNbCols() int {
 }
 
 // Returns true if the matrix is a square matrix, false otherwise
-func (m *Matrix) IsSquareMatrix() bool {
+func (m *Matrix) IsSquare() bool {
 	return m.nbCols == m.nbRows
 }
 
@@ -164,7 +164,7 @@ func (m *Matrix) Sub(other *Matrix) (*Matrix, error) {
 // Returns true if so, false otherwise
 // By convention, a matrix with no row or column is a diagonal matrix
 func (m *Matrix) IsDiagonal() bool {
-	if !m.IsSquareMatrix() {
+	if !m.IsSquare() {
 		return false
 	}
 	// By convention
@@ -183,12 +183,39 @@ func (m *Matrix) IsDiagonal() bool {
 	return true
 }
 
+// Tells if a matrix is a scalar matrix
+//
+// Returns true if so, false otherwise
+// By convention, a matrix with no row or column is a scalar matrix
+func (m *Matrix) IsScalar(scalar float64) bool {
+	if !m.IsSquare() {
+		return false
+	}
+	// By convention
+	if m.nbRows == 0 || m.nbCols == 0 {
+		return true
+	}
+
+	for i := 0; i < m.nbRows; i++ {
+		for j := 0; j < m.nbCols; j++ {
+			if i != j && m.data[i][j] != 0.0 {
+				return false
+			}
+			if i == j && m.data[i][j] != scalar {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
 // Tells if a matrix is a hollow matrix
 //
 // Returns true if so, false otherwise
 // By convention, a matrix with no row or column is a hollow matrix
 func (m *Matrix) IsHollow() bool {
-	if !m.IsSquareMatrix() {
+	if !m.IsSquare() {
 		return false
 	}
 	// By convention
@@ -210,7 +237,7 @@ func (m *Matrix) IsHollow() bool {
 // Returns true if so, false otherwise
 // By convention, a matrix with no row or column is an identity matrix
 func (m *Matrix) IsIdentity() bool {
-	if !m.IsSquareMatrix() {
+	if !m.IsSquare() {
 		return false
 	}
 	// By convention
@@ -286,7 +313,7 @@ func (m *Matrix) Mul(other *Matrix) (*Matrix, error) {
 //
 // Returns an error is the matrix is not squared
 func (m *Matrix) Determinant() (float64, error) {
-	if !m.IsSquareMatrix() {
+	if !m.IsSquare() {
 		return 0.0, fmt.Errorf("cannot compute the determinant of a non-square matrix")
 	}
 	return m.determinantRecursive(), nil
@@ -385,7 +412,7 @@ func (m *Matrix) ToRowEchelon() *Matrix {
 	return ref
 }
 
-// Returns the rank of matrix
+// Returns the rank of the matrix
 func (m *Matrix) Rank() int {
 	ref := m.ToRowEchelon()
 	rank := 0
@@ -427,7 +454,7 @@ func (m *Matrix) IsInvertible() bool {
 		return false
 	}
 	// Must be squared
-	if !m.IsSquareMatrix() {
+	if !m.IsSquare() {
 		return false
 	}
 	// Determinant must be non-zero
@@ -451,7 +478,7 @@ func (m *Matrix) Invert() (*Matrix, error) {
 		return nil, fmt.Errorf("matrix is singular, cannot invert")
 
 	}
-	if !m.IsSquareMatrix() {
+	if !m.IsSquare() {
 		return nil, fmt.Errorf("matrix is not squared, it cannot be inverted")
 	}
 	// 2x2 matrix
@@ -555,4 +582,46 @@ func (m *Matrix) EqualsApprox(other *Matrix, epsilon float64) bool {
 		}
 	}
 	return true
+}
+
+// Returns the matrix raised to the given integer power
+//
+// Power 0 returns the identity matrix (only for square matrices)
+// Negative powers compute the inverse of the matrix first (only if invertible)
+func (m *Matrix) Pow(power int) (*Matrix, error) {
+	// Check if it's square first
+	if !m.IsSquare() {
+		return nil, fmt.Errorf("power %d cannot be computed for a non-square matrix", power)
+	}
+	// Identity matrix for power 0
+	if power == 0 {
+		return NewIdentity(m.nbRows), nil
+	}
+	// The matrix itself, make a copy
+	if power == 1 {
+		return NewFromData(m.data)
+	}
+
+	base := m
+	var err error
+
+	// Negative power: invert the matrix
+	if power < 0 {
+		base, err = m.Invert()
+		if err != nil {
+			return nil, fmt.Errorf("cannot raise to power %d: matrix is not invertible", power)
+		}
+		power = -power
+	}
+
+	// Exponentiation by repeated multiplication
+	result := NewIdentity(m.nbRows)
+	for i := 0; i < power; i++ {
+		result, err = result.Mul(base)
+		if err != nil {
+			return nil, fmt.Errorf("matrix multiplication failed: %w", err)
+		}
+	}
+
+	return result, nil
 }
