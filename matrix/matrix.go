@@ -1,3 +1,6 @@
+// Package matrix provides basic matrix operations including creation,
+// access, arithmetic, and linear algebra utilities such as determinant,
+// rank, transpose, inversion and others.
 package matrix
 
 import (
@@ -5,6 +8,10 @@ import (
 	"math"
 )
 
+// Matrix represents a two-dimensional matrix of float64 values.
+//
+// It includes metadata for the number of rows and columns to simplify
+// operations and validations.
 type Matrix struct {
 	data   [][]float64
 	nbRows int
@@ -89,7 +96,7 @@ func NewFromData(mData [][]float64) (*Matrix, error) {
 	}, nil
 }
 
-// Creates a new identity matrix from a given size
+// Creates and returns a new identity matrix of a given size.
 func NewIdentity(size int) *Matrix {
 	data := make([][]float64, size)
 	for i := range data {
@@ -108,9 +115,9 @@ func NewIdentity(size int) *Matrix {
 	return idMatrix
 }
 
-// Tells if a matrix is a zero matrix
+// Tells whether all elements of the matrix are zero.
 //
-// Returns true if so, else otherwise
+// Returns true if the matrix is a zero matrix, false otherwise.
 func (m *Matrix) IsZero() bool {
 	for i := 0; i < m.nbRows; i++ {
 		for j := 0; j < m.nbCols; j++ {
@@ -123,9 +130,9 @@ func (m *Matrix) IsZero() bool {
 	return true
 }
 
-// Performs the addition between two matrices and returns the resulting one
+// Returns a new matrix that is the element-wise sum of m and other.
 //
-// Returns an error if both matrices do not share the same number of rows or columns
+// Returns an error if the matrices do not have the same dimensions.
 func (m *Matrix) Add(other *Matrix) (*Matrix, error) {
 	if m.nbRows != other.nbRows || m.nbCols != other.nbCols {
 		return nil, fmt.Errorf("mismatch in the number of rows or columns between matrices, cannot perform addition")
@@ -141,9 +148,9 @@ func (m *Matrix) Add(other *Matrix) (*Matrix, error) {
 	return result, nil
 }
 
-// Performs the substraction between two matrices and returns the resulting one
+// Returns a new matrix that is the element-wise difference of m and other.
 //
-// Returns an error if both matrices do not share the same number of rows or columns
+// Returns an error if the matrices do not have the same dimensions.
 func (m *Matrix) Sub(other *Matrix) (*Matrix, error) {
 	if m.nbRows != other.nbRows || m.nbCols != other.nbCols {
 		return nil, fmt.Errorf("mismatch in the number of rows or columns between matrices, cannot perform substraction")
@@ -159,10 +166,9 @@ func (m *Matrix) Sub(other *Matrix) (*Matrix, error) {
 	return result, nil
 }
 
-// Tells if a matrix is a diagonal matrix
+// Tells whether the matrix is a diagonal matrix.
 //
-// Returns true if so, false otherwise
-// By convention, a matrix with no row or column is a diagonal matrix
+// By convention, an empty (0x0) matrix is considered diagonal.
 func (m *Matrix) IsDiagonal() bool {
 	if !m.IsSquare() {
 		return false
@@ -183,10 +189,9 @@ func (m *Matrix) IsDiagonal() bool {
 	return true
 }
 
-// Tells if a matrix is a scalar matrix
+// Tells whether the matrix is a scalar matrix with the given scalar value.
 //
-// Returns true if so, false otherwise
-// By convention, a matrix with no row or column is a scalar matrix
+// By convention, an empty (0x0) matrix is considered scalar.
 func (m *Matrix) IsScalar(scalar float64) bool {
 	if !m.IsSquare() {
 		return false
@@ -210,10 +215,9 @@ func (m *Matrix) IsScalar(scalar float64) bool {
 	return true
 }
 
-// Tells if a matrix is a hollow matrix
+// Tells whether the matrix is a hollow matrix.
 //
-// Returns true if so, false otherwise
-// By convention, a matrix with no row or column is a hollow matrix
+// By convention, an empty (0x0) matrix is considered hollow.
 func (m *Matrix) IsHollow() bool {
 	if !m.IsSquare() {
 		return false
@@ -232,10 +236,9 @@ func (m *Matrix) IsHollow() bool {
 	return true
 }
 
-// Tells if a matrix is the identity matrix
+// Tells whether the matrix is the identity matrix.
 //
-// Returns true if so, false otherwise
-// By convention, a matrix with no row or column is an identity matrix
+// By convention, an empty (0x0) matrix is considered an identity matrix.
 func (m *Matrix) IsIdentity() bool {
 	if !m.IsSquare() {
 		return false
@@ -260,13 +263,11 @@ func (m *Matrix) IsIdentity() bool {
 }
 
 // Returns a new matrix resulting from the scalar multiplication
-// of the current matrix with the given scalar value
+// of the current matrix with the given scalar value.
 //
-// Each element of the original matrix is multiplied by the scalar value
-// The original matrix is not modified
-//
-// If the scalar is 1.0, the original matrix is returned as-is
-// If the matrix is a zero matrix, it is returned as-is
+// Each element of the matrix is multiplied by the scalar. The original matrix
+// is not modified. If the scalar is 1.0 or the matrix is a zero matrix,
+// the original matrix is returned as-is (no copy is made).
 func (m *Matrix) MulScalar(scalar float64) *Matrix {
 	if m.IsZero() || scalar == 1.0 {
 		return m
@@ -281,9 +282,12 @@ func (m *Matrix) MulScalar(scalar float64) *Matrix {
 	return result
 }
 
-// Performs matrix multiplication between the current matrix and the given matrix
+// Performs standard matrix multiplication between the receiver matrix and another given matrix.
 //
-// Returns a new matrix result = m * other, or an error if dimensions are incompatible
+// It returns a new matrix representing the product m * other. If the number of
+// columns in the calling matrix does not match the number of rows in the other matrix,
+// an error is returned. If either matrix is a zero matrix, a new zero matrix of
+// the correct dimensions is returned.
 func (m *Matrix) Mul(other *Matrix) (*Matrix, error) {
 	if m.nbCols != other.nbRows {
 		return nil, fmt.Errorf("mismatch between number of columns of first matrix (%d) and number of rows of second matrix (%d), cannot perform multiplication", m.nbCols, other.nbRows)
@@ -309,9 +313,10 @@ func (m *Matrix) Mul(other *Matrix) (*Matrix, error) {
 	return result, nil
 }
 
-// Returns the determinant of a matrix
+// Returns the determinant of the calling matrix.
 //
-// Returns an error is the matrix is not squared
+// It returns an error if the matrix is not square.
+// Internally, it uses a recursive Laplace expansion approach.
 func (m *Matrix) Determinant() (float64, error) {
 	if !m.IsSquare() {
 		return 0.0, fmt.Errorf("cannot compute the determinant of a non-square matrix")
@@ -319,9 +324,10 @@ func (m *Matrix) Determinant() (float64, error) {
 	return m.determinantRecursive(), nil
 }
 
-// Helper function
-// Returns the determinant of a matrix by breaking it down
-// Into smaller matrices recursively
+// Computes the determinant of a square matrix recursively
+// using Laplace expansion along the first row.
+//
+// This helper method assumes the matrix is square and valid.
 func (m *Matrix) determinantRecursive() float64 {
 	if m.nbRows == 1 {
 		return m.data[0][0]
@@ -343,8 +349,11 @@ func (m *Matrix) determinantRecursive() float64 {
 	return determinant
 }
 
-// Helper function
-// Returns a new Matrix with row i and column j removed
+// Returns the minor matrix obtained by removing the specified
+// row and column from the current matrix.
+//
+// It is used as a helper in determinant computations.
+// The resulting minor is a deep copy of the reduced matrix.
 func (m *Matrix) getMinor(rowToRemove, colToRemove int) *Matrix {
 	minorData := [][]float64{}
 	for i := 0; i < m.nbRows; i++ {
@@ -364,10 +373,11 @@ func (m *Matrix) getMinor(rowToRemove, colToRemove int) *Matrix {
 	return minor
 }
 
-// Returns a new matrix in Row Echelon Form (REF)
-// Uses Gaussian elimination
+// Returns a new matrix that is the Row Echelon Form (REF)
+// of the calling matrix.
 //
-// This function does not modify the original matrix
+// The method applies Gaussian elimination without row scaling,
+// and does not modify the original matrix.
 func (m *Matrix) ToRowEchelon() *Matrix {
 	if m.nbRows == 0 || m.nbCols == 0 {
 		return New(m.nbRows, m.nbCols)
@@ -412,7 +422,10 @@ func (m *Matrix) ToRowEchelon() *Matrix {
 	return ref
 }
 
-// Returns the rank of the matrix
+// Returns the rank of the matrix.
+//
+// The rank is computed by transforming the matrix into its Row Echelon Form (REF)
+// using Gaussian elimination and counting the number of non-zero rows.
 func (m *Matrix) Rank() int {
 	ref := m.ToRowEchelon()
 	rank := 0
@@ -432,9 +445,10 @@ func (m *Matrix) Rank() int {
 	return rank
 }
 
-// Tells if a matrix is said "full rank"
+// Tells whether the matrix is full rank.
 //
-// Namely if its rank is the highest possible for a matrix of the same size
+// A matrix is full rank if its rank is equal to the smaller of its number
+// of rows and columns.
 func (m *Matrix) IsFullRank() bool {
 	rank := m.Rank()
 	min := min(m.nbRows, m.nbCols)
@@ -466,13 +480,13 @@ func (m *Matrix) IsInvertible() bool {
 	return true
 }
 
-// Returns the inverse of the matrix if it exists
+// Invert returns the inverse of the matrix.
 //
-// It returns an error if the matrix is singular (non-invertible) or not square
-// For 2x2 matrices, it uses the direct "closed-form" formula
-// For larger matrices, it uses Gaussian elimination with pivoting
+// For 2x2 matrices, it uses a "closed-form" formula.
+// For larger square matrices, it applies Gaussian elimination with pivoting.
 //
-// The original matrix is not modified
+// Returns an error if the matrix is not square or is singular (non-invertible).
+// The original matrix is not modified.
 func (m *Matrix) Invert() (*Matrix, error) {
 	if !m.IsInvertible() {
 		return nil, fmt.Errorf("matrix is singular, cannot invert")
@@ -550,9 +564,9 @@ func (m *Matrix) Invert() (*Matrix, error) {
 	return invMatrix, nil
 }
 
-// Performs division between two matrices and returns the resulting one
+// Performs matrix division by multiplying the current matrix by the inverse of the given matrix.
 //
-// In other words, performs multiplication between the matrix, and the inverse of the given one
+// Returns an error if the given matrix is not invertible or if multiplication fails.
 func (m *Matrix) Div(other *Matrix) (*Matrix, error) {
 	invert, err := other.Invert()
 	if err != nil {
@@ -566,10 +580,10 @@ func (m *Matrix) Div(other *Matrix) (*Matrix, error) {
 	return result, nil
 }
 
-// Helper method that compares two matrices for approximate equality (float64 type)
+// Helper method that compares two matrices for approximate equality (float64 type).
 //
 // It returns true if both matrices have the same dimensions and each pair of
-// corresponding elements differ by no more than the specified epsilon value
+// corresponding elements differ by no more than the specified epsilon value.
 func (m *Matrix) EqualsApprox(other *Matrix, epsilon float64) bool {
 	if m.nbRows != other.nbRows || m.nbCols != other.nbCols {
 		return false
@@ -584,10 +598,10 @@ func (m *Matrix) EqualsApprox(other *Matrix, epsilon float64) bool {
 	return true
 }
 
-// Returns the matrix raised to the given integer power
+// Returns the matrix raised to the given integer power.
 //
-// Power 0 returns the identity matrix (only for square matrices)
-// Negative powers compute the inverse of the matrix first (only if invertible)
+// Power 0 returns the identity matrix (only for square matrices).
+// Negative powers compute the inverse of the matrix first (only if invertible).
 func (m *Matrix) Pow(power int) (*Matrix, error) {
 	// Check if it's square first
 	if !m.IsSquare() {
@@ -626,7 +640,9 @@ func (m *Matrix) Pow(power int) (*Matrix, error) {
 	return result, nil
 }
 
-// Returns the transpose of the matrix (rows become columns and vice versa)
+// Transpose returns the transpose of the matrix.
+//
+// The transpose flips the matrix over its diagonal, converting rows to columns and vice versa.
 func (m *Matrix) Transpose() *Matrix {
 	if m.nbRows == 0 || m.nbCols == 0 {
 		return New(0, 0)

@@ -1,3 +1,22 @@
+// Package vector provides a simple implementation of mathematical vectors
+// with dynamic dimensions and common operations and features such as addition,
+// subtraction, scalar operations, norm calculation, normalization,
+// projection, and equality comparison.
+//
+// Vectors are represented as slices of float64 values, and all operations
+// are implemented to work on vectors of the same dimension, returning
+// errors when incompatible dimensions are encountered.
+//
+// The package supports:
+//   - Creation of new vectors with a given size or from existing data
+//   - Element-wise arithmetic operations (Add, Sub, Mul, Div)
+//   - Scalar operations on each component (AddScalar, SubScalar, etc.)
+//   - Computation of vector norm and normalization
+//   - Dot product and projection onto another vector
+//   - Basic utility checks like equality and zero-vector check
+//
+// This package can be very useful for numerical computations, simulations, physics,
+// game engines and machine learning tasks that require vector math with customizable dimensions.
 package vector
 
 import (
@@ -5,10 +24,10 @@ import (
 	"math"
 )
 
-// Epsilon for floating-point comparison
+// Epsilon for floating-point comparison.
 const epsilon = 1e-9
 
-// Computes and returns the Euclidian distance between two vectors
+// Computes and returns the Euclidian distance between two vectors.
 func Distance(v1 *Vector, v2 *Vector) (float64, error) {
 	if v1.dim != v2.dim {
 		return 0.0, fmt.Errorf("cannot compute distance for vectors of different dimensions: %d vs %d", v1.dim, v2.dim)
@@ -23,9 +42,17 @@ func Distance(v1 *Vector, v2 *Vector) (float64, error) {
 	return math.Sqrt(sumSquares), nil
 }
 
-// Tells if two vectors are colinear
+// Determines whether two vectors are colinear.
 //
-// Returns true if so, else otherwise
+// Two vectors are considered colinear if they "lie" on the same line,
+// meaning one is a scalar multiple of the other.
+//
+// Special cases:
+//   - If both vectors are zero vectors (dimension 0 or all elements are zero), they are considered colinear.
+//   - If the vectors have different dimensions, they are not colinear.
+//   - If either vector is a zero vector, the vectors are considered colinear.
+//
+// Returns true if the vectors are colinear, false otherwise.
 func AreColinear(v1 *Vector, v2 *Vector) bool {
 	if v1.dim == 0 && v2.dim == 0 {
 		// Considered colinear if norm is zero
@@ -63,7 +90,12 @@ func AreColinear(v1 *Vector, v2 *Vector) bool {
 	return true
 }
 
-// Computes and returns the dot product between two vectors
+// Computes and returns the dot product (scalar product) of two vectors.
+//
+// The dot product is calculated as the sum of the products of corresponding
+// elements from the two vectors.
+//
+// Returns an error if the vectors have different dimensions.
 func DotProduct(v1 *Vector, v2 *Vector) (float64, error) {
 	if v1.dim != v2.dim {
 		return 0.0, fmt.Errorf("cannot compute dot products for vectors of different dimensions: %d vs %d", v1.dim, v2.dim)
@@ -76,9 +108,16 @@ func DotProduct(v1 *Vector, v2 *Vector) (float64, error) {
 	return sum, nil
 }
 
-// Computes and returns the linear interpolation for two vectors
-// And a fraction, called t
-// Returns an error if vectors of different dimensions
+// Performs and returns linear interpolation between two vectors using a given factor t.
+//
+// The interpolation is calculated as:
+//
+//	result = v1 * (1 - t) + v2 * t
+//
+// Where t is typically in the range [0,1], but values outside this range
+// will extrapolate accordingly.
+//
+// Returns a new interpolated vector or an error if the input vectors have different dimensions.
 func Lerp(v1 *Vector, v2 *Vector, t float64) (*Vector, error) {
 	if v1.dim != v2.dim {
 		return nil, fmt.Errorf("cannot compute linear interpolation for vectors of different dimensions: %d vs %d", v1.dim, v2.dim)
@@ -92,8 +131,13 @@ func Lerp(v1 *Vector, v2 *Vector, t float64) (*Vector, error) {
 	return NewFromData(result), nil
 }
 
-// Cross2D computes the 2D cross product (aka the perp dot product)
-// Returns a scalar representing the norm (magnitude) of the vector perpendicular to the plane formed by v1 and v2
+// Computes and returns the 2D cross product (aka the perp dot product) of two 2-dimensional vectors.
+//
+// The result is a scalar equal to:
+//
+//	x1*y2 - y1*x2
+//
+// Returns an error if the vectors do not have exactly 2 dimensions or if their dimensions differ.
 func Cross2D(v1 *Vector, v2 *Vector) (float64, error) {
 	if v1.dim != v2.dim {
 		return 0.0, fmt.Errorf("cannot perform cross2D operation for vectors of different dimensions: %d vs %d", v1.dim, v2.dim)
@@ -106,12 +150,20 @@ func Cross2D(v1 *Vector, v2 *Vector) (float64, error) {
 	return v1.data[0]*v2.data[1] - v1.data[1]*v2.data[0], nil
 }
 
-// Utils function for floating verification
+// Returns true if two float64 values are approximately equal,
+// within a specified epsilon tolerance (constant variable at the start of this source file).
+//
+// This is used for comparing floating-point values while accounting for rounding errors.
 func almostEqual(a, b, epsilon float64) bool {
 	return math.Abs(a-b) <= epsilon
 }
 
-// Utils function for floating verification
+// Returns true if two vectors are approximately equal,
+// comparing each corresponding element within a specified epsilon tolerance
+// (constant variable at the start of this source file).
+//
+// Returns false if the vectors differ in dimension or any element differs
+// beyond the allowed epsilon.
 func vectorsAlmostEqual(v1, v2 *Vector, epsilon float64) bool {
 	if v1.dim != v2.dim {
 		return false
@@ -124,8 +176,12 @@ func vectorsAlmostEqual(v1, v2 *Vector, epsilon float64) bool {
 	return true
 }
 
-// Tells if two vectors are orthogonal
-// Returns true if so, false otherwise
+// Determines whether two vectors are orthogonal (perpendicular).
+//
+// Two vectors are orthogonal if their dot product is zero.
+//
+// Returns true if the vectors are orthogonal, false otherwise.
+// Returns false if the dot product cannot be computed due to a dimension mismatch.
 func AreOrthogonal(v1 *Vector, v2 *Vector) bool {
 	result, err := DotProduct(v1, v2)
 	if err != nil {
