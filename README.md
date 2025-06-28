@@ -28,17 +28,17 @@ To get a quick preview, please check out:
 
 ## Tests
 
-### Large unit test coverage
+### Large unit test coverage:
 
-matrix: 94.1%
-vector: 100%
+- matrix: 94.1%
+- vector: 100%
 
-### Covers edge cases such as
+### Covers edge cases such as:
 
-Empty or malformed inputs
-Zero matrices or vectors
-Non-square matrices
-Singular and non-invertible matrices
+- Empty or malformed inputs  
+- Zero matrices or vectors  
+- Non-square matrices  
+- Singular and non-invertible matrices
 
 All tests pass with:
 
@@ -54,11 +54,9 @@ Demos in examples/ are excluded from testing but useful for interactive runs
 
 To build and test this project, make sure you have:
 
-Go 1.18+ installed
-
-Make
-
-(Optional) CMake if you plan on integrating with other native modules, though not required by default
+- Go 1.18+ installed  
+- Make  
+- (Optional) CMake if you plan on integrating with other native modules (not required by default)
 
 ---
 
@@ -70,8 +68,10 @@ go get github.com/JoLandry/linalgo
 
 Then import and use : 
 
-import "github.com/JoLandry/linalgo/vector"
-import "github.com/JoLandry/linalgo/matrix"
+import (
+    "github.com/JoLandry/linalgo/vector"
+    "github.com/JoLandry/linalgo/matrix"
+)
 
 ---
 
@@ -79,17 +79,20 @@ import "github.com/JoLandry/linalgo/matrix"
 
 You can use the provided Makefile for common development workflows:
 
+```bash
 make                  # Runs fmt, vet, and test
 make test             # Run unit tests
 make test-cover       # Run tests with coverage report
 make run-matrix-demo  # Run example matrix demo
 make run-vector-demo  # Run example vector demo
 make clean            # Clean up coverage files
+```
 
 ---
 
 ## Project Structure
 
+```text
 linalgo/
 │
 ├── matrix/         # Matrix types and operations
