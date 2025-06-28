@@ -2,6 +2,12 @@
 
 `linalgo` is a lightweight Go library for linear algebra operations on vectors and matrices. It provides common functionality such as vector operations, matrix multiplication, determinant computation, rank, identity checks, and more.
 
+## Version
+
+1.0.0
+
+---
+
 ## Features
 
 Here are some key features, provided by the library:
@@ -100,6 +106,7 @@ linalgo/
 ├── examples/       # Demos for Matrix and Vector types 
 ├── Makefile        # Build and test automation
 └── go.mod          # Module definition
+```
 
 ---
 
