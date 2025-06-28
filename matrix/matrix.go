@@ -6,6 +6,7 @@ package matrix
 import (
 	"fmt"
 	"math"
+	"strings"
 )
 
 // Matrix represents a two-dimensional matrix of float64 values.
@@ -16,6 +17,32 @@ type Matrix struct {
 	data   [][]float64
 	nbRows int
 	nbCols int
+}
+
+// String returns a human-readable string representation of the matrix.
+func (m *Matrix) String() string {
+	if m.nbRows == 0 || m.nbCols == 0 {
+		return "[]"
+	}
+
+	var builder strings.Builder
+	builder.WriteString("[\n")
+	for i := 0; i < m.nbRows; i++ {
+		builder.WriteString("  [")
+		for j := 0; j < m.nbCols; j++ {
+			builder.WriteString(fmt.Sprintf("%8.4f", m.data[i][j]))
+			if j < m.nbCols-1 {
+				builder.WriteString(", ")
+			}
+		}
+		builder.WriteString("]")
+		if i < m.nbRows-1 {
+			builder.WriteString(",\n")
+		}
+	}
+	builder.WriteString("\n]")
+
+	return builder.String()
 }
 
 // Get the data of the matrix
@@ -113,6 +140,48 @@ func NewIdentity(size int) *Matrix {
 	}
 
 	return idMatrix
+}
+
+// Creates and returns a matrix from a flat slice of values.
+//
+// The matrix will have the specified number of rows and columns.
+// If the number of values is not exactly rows * cols, it panics.
+func NewFromFlat(rows, cols int, values []float64) *Matrix {
+	if len(values) != rows*cols {
+		panic("number of values does not match matrix dimensions")
+	}
+
+	data := make([][]float64, rows)
+	for i := 0; i < rows; i++ {
+		data[i] = make([]float64, cols)
+		for j := 0; j < cols; j++ {
+			data[i][j] = values[i*cols+j]
+		}
+	}
+
+	return &Matrix{
+		data:   data,
+		nbRows: rows,
+		nbCols: cols,
+	}
+}
+
+// Creates and returns a square diagonal matrix with the provided diagonal values.
+//
+// All non-diagonal elements are set to zero.
+func NewDiagonal(values []float64) *Matrix {
+	size := len(values)
+	data := make([][]float64, size)
+	for i := 0; i < size; i++ {
+		data[i] = make([]float64, size)
+		data[i][i] = values[i]
+	}
+
+	return &Matrix{
+		data:   data,
+		nbRows: size,
+		nbCols: size,
+	}
 }
 
 // Tells whether all elements of the matrix are zero.

@@ -1,6 +1,7 @@
 package matrix
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -955,4 +956,83 @@ func TestMatrix_Transpose_EmptyMatrix(t *testing.T) {
 	assert.Equal(t, 0, result.nbRows)
 	assert.Equal(t, 0, result.nbCols)
 	assert.Empty(t, result.data)
+}
+
+func containsAll(str string, substrs []string) bool {
+	for _, s := range substrs {
+		if !strings.Contains(str, s) {
+			return false
+		}
+	}
+	return true
+}
+
+func TestMatrixString_Empty(t *testing.T) {
+	m := New(0, 0)
+	expected := "[]"
+
+	if m.String() != expected {
+		t.Errorf("expected %q, got %q", expected, m.String())
+	}
+}
+
+func TestMatrixString_FormattedOutput(t *testing.T) {
+	data := [][]float64{
+		{1.0, 2.5, 3.1234},
+		{4.56789, 5.0, 6.01},
+	}
+	m, _ := NewFromData(data)
+
+	output := m.String()
+
+	if !containsAll(output, []string{"1.0000", "2.5000", "3.1234", "4.5679", "6.0100"}) {
+		t.Errorf("formatted output missing expected values: %q", output)
+	}
+	if output[0] != '[' {
+		t.Errorf("expected output to start with '[', got %q", output[0])
+	}
+}
+
+func TestNewFromFlat_Correct(t *testing.T) {
+	values := []float64{1, 2, 3, 4, 5, 6}
+	m := NewFromFlat(2, 3, values)
+
+	expected := [][]float64{
+		{1, 2, 3},
+		{4, 5, 6},
+	}
+
+	for i := range expected {
+		for j := range expected[i] {
+			if m.data[i][j] != expected[i][j] {
+				t.Errorf("expected m[%d][%d] = %f, got %f", i, j, expected[i][j], m.data[i][j])
+			}
+		}
+	}
+}
+
+func TestNewFromFlat_PanicOnMismatch(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("expected panic due to mismatched dimensions, but did not panic")
+		}
+	}()
+
+	// Should panic
+	NewFromFlat(2, 3, []float64{1, 2, 3})
+}
+
+func TestNewDiagonal_Correct(t *testing.T) {
+	diag := []float64{1.1, 2.2, 3.3}
+	m := NewDiagonal(diag)
+
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			if i == j && m.data[i][j] != diag[i] {
+				t.Errorf("expected diagonal element m[%d][%d] = %f, got %f", i, j, diag[i], m.data[i][j])
+			} else if i != j && m.data[i][j] != 0.0 {
+				t.Errorf("expected off-diagonal element m[%d][%d] = 0.0, got %f", i, j, m.data[i][j])
+			}
+		}
+	}
 }

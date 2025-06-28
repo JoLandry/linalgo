@@ -22,12 +22,32 @@ package vector
 import (
 	"fmt"
 	"math"
+	"strings"
 )
 
 // Vector type with dynamic size (dimension)
 type Vector struct {
 	data []float64
 	dim  int
+}
+
+// String returns a human-readable string representation of the vector.
+func (v *Vector) String() string {
+	if v.dim == 0 {
+		return "[]"
+	}
+
+	var builder strings.Builder
+	builder.WriteString("[")
+	for i := 0; i < v.dim; i++ {
+		builder.WriteString(fmt.Sprintf("%8.4f", v.data[i]))
+		if i < v.dim-1 {
+			builder.WriteString(", ")
+		}
+	}
+	builder.WriteString("]")
+
+	return builder.String()
 }
 
 // Get the data of the vector

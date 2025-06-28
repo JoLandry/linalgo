@@ -2,6 +2,7 @@ package vector
 
 import (
 	"math"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -299,4 +300,35 @@ func TestProjectOnto_ProjectionOntoItself_ShouldReturnSameVector(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.True(t, vectorsAlmostEqual(proj, v, 1e-9), "expected %v, got %v", v.data, proj.data)
+}
+
+func containsAll(str string, substrs []string) bool {
+	for _, s := range substrs {
+		if !strings.Contains(str, s) {
+			return false
+		}
+	}
+	return true
+}
+
+func TestVectorString_Empty(t *testing.T) {
+	v := New(0)
+	expected := "[]"
+
+	if v.String() != expected {
+		t.Errorf("expected %q, got %q", expected, v.String())
+	}
+}
+
+func TestVectorString_FormattedOutput(t *testing.T) {
+	v := NewFromData([]float64{1.2345, 2.0, 3.9999})
+
+	output := v.String()
+
+	if !containsAll(output, []string{"1.2345", "2.0000", "3.9999"}) {
+		t.Errorf("formatted output missing expected values: %q", output)
+	}
+	if output[0] != '[' || output[len(output)-1] != ']' {
+		t.Errorf("expected output to be enclosed in brackets, got %q", output)
+	}
 }
